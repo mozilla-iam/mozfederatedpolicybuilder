@@ -6,11 +6,11 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="mozfederatedpolicybuilder",
-    version="0.0.1",
+    version="0.0.2",
     author="Gene Wood",
     author_email='gene_wood@cementhorizon.com',
     description="Tool to create an AWS IAM Role with a federated policy "
-                "allowing users to loging with Single Sign On",
+                "allowing users to login with Single Sign On",
     extras_require={
         "test": [
             "pytest",
