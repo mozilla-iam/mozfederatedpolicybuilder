@@ -12,7 +12,7 @@
                             "Principal": {
                                 "Federated": "arn:aws:iam::415589142697:oidc-provider/auth.mozilla.auth0.com/"
                             },
-                            "Action": "sts:AssumeRole",
+                            "Action": "sts:AssumeRoleWithWebIdentity",
                             "Effect": "Allow",
                             "Condition": {
                                 "StringEquals": {

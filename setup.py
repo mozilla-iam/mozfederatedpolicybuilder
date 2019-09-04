@@ -6,7 +6,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="mozfederatedpolicybuilder",
-    version="0.0.3",
+    version="0.0.4",
     author="Gene Wood",
     author_email='gene_wood@cementhorizon.com',
     description="Tool to create an AWS IAM Role with a federated policy "
