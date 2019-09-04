@@ -177,7 +177,7 @@ def get_policy():
     assume_role_policy_document['Statement'][0]['Principal'] = {
         'Federated': identity_provider
     }
-    assume_role_policy_document['Statement'][0]['Action'] = 'sts:AssumeRole'
+    assume_role_policy_document['Statement'][0]['Action'] = 'sts:AssumeRoleWithWebIdentity'
     assume_role_policy_document['Statement'][0]['Effect'] = 'Allow'
     assume_role_policy_document['Statement'][0]['Condition'] = OrderedDict()
     assume_role_policy_document['Statement'][0][
