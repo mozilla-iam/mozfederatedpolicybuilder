@@ -1,0 +1,20 @@
+Metadata-Version: 2.1
+Name: mozfederatedpolicybuilder
+Version: 0.0.1
+Summary: Tool to create an AWS IAM Role with a federated policy allowing users to loging with Single Sign On
+Home-page: https://github.com/mozilla-iam/mozfederatedpolicybuilder
+Author: Gene Wood
+Author-email: gene_wood@cementhorizon.com
+License: UNKNOWN
+Description: UNKNOWN
+Platform: UNKNOWN
+Classifier: Development Status :: 3 - Alpha
+Classifier: Environment :: Console
+Classifier: Intended Audience :: Developers
+Classifier: Programming Language :: Python :: 2
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)
+Classifier: Operating System :: OS Independent
+Classifier: Topic :: Software Development :: Code Generators
+Description-Content-Type: text/markdown
+Provides-Extra: test

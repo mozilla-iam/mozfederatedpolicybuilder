@@ -1,0 +1,9 @@
+PyYAML
+
+[test]
+pytest
+pytest-clarity
+pytest-cov
+
+[test:python_version < "3.3"]
+mock

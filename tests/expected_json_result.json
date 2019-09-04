@@ -1,0 +1,51 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Resources": {
+        "BazIAMRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "RoleName": "baz",
+                "AssumeRolePolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Principal": {
+                                "Federated": "arn:aws:iam::415589142697:oidc-provider/auth.mozilla.auth0.com/"
+                            },
+                            "Action": "sts:AssumeRole",
+                            "Effect": "Allow",
+                            "Condition": {
+                                "StringEquals": {
+                                    "auth.mozilla.auth0.com/:aud": "N7lULzWtfVUDGymwDs0yDEq6ZcwmFazj"
+                                },
+                                "ForAnyValue:StringEquals": {
+                                    "auth.mozilla.auth0.com/:amr": [
+                                        "foo",
+                                        "bar"
+                                    ]
+                                }
+                            }
+                        }
+                    ]
+                },
+                "Policies": [
+                    {
+                        "PolicyName": "ExamplePolicyGrantingGetCallerIdentity",
+                        "PolicyDocument": {
+                            "Version": "2012-10-17",
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "sts:GetCallerIdentity"
+                                    ],
+                                    "Resource": "*",
+                                    "Effect": "Allow"
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        }
+    }
+}

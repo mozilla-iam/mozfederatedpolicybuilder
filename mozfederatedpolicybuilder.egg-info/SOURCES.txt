@@ -1,0 +1,10 @@
+README.md
+setup.py
+mozfederatedpolicybuilder/__init__.py
+mozfederatedpolicybuilder.egg-info/PKG-INFO
+mozfederatedpolicybuilder.egg-info/SOURCES.txt
+mozfederatedpolicybuilder.egg-info/dependency_links.txt
+mozfederatedpolicybuilder.egg-info/entry_points.txt
+mozfederatedpolicybuilder.egg-info/requires.txt
+mozfederatedpolicybuilder.egg-info/top_level.txt
+tests/test_mozfederatedpolicybuilder.py
