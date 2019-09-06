@@ -1,6 +1,6 @@
 # mozfederatedpolicybuilder
 
-[![Build Status](https://travis-ci.com/mozilla-iam/mozfederatedpolicybuilder.svg?branch=master)](https://travis-ci.com/mozilla-iam/mozfederatedpolicybuilder)
+[![PyPI version](https://badge.fury.io/py/mozfederatedpolicybuilder.svg)](https://badge.fury.io/py/mozfederatedpolicybuilder) [![Build Status](https://travis-ci.com/mozilla-iam/mozfederatedpolicybuilder.svg?branch=master)](https://travis-ci.com/mozilla-iam/mozfederatedpolicybuilder)
 
 The Mozilla federated policy builder helps craft AWS IAM Roles that permit users
 to assume those roles using a federated identity.
