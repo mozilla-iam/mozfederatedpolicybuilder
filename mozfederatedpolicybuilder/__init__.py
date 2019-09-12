@@ -24,6 +24,11 @@ GROUPS_PROMPT = '''User groups can be granted access to the federated IAM role.
     assume the IAM role : "foo,bar"
 * Supported : Allow users in any group that begins with "foo_" : "foo_*"'''
 
+ACCOUNT_ID_PROMPT = '''Enter the AWS Account ID of the account that you will
+deploy the IAM role in. This is a 12 digit number.'''
+
+IDENTITY_PROVIDER_URL = 'auth.mozilla.auth0.com/'
+AUDIENCE_VALUE = 'N7lULzWtfVUDGymwDs0yDEq6ZcwmFazj'
 # Enable PyYAML support for OrderedDict
 yaml.add_representer(
     OrderedDict,
@@ -61,28 +66,49 @@ def create_cloudformation_template(
         assume_role_policy_document,
         policy_name,
         policy,
+        groups,
         formatter):
     resource_name = (
         ''.join([capitalize(x) for x in role_name.split('_')]) + 'IAMRole'
         if role_name else 'MyFederatedIAMRole')
     template = OrderedDict()
     template['AWSTemplateFormatVersion'] = '2010-09-09'
+    template['Description'] = (
+        'Federated IAM Role which the groups {} are permitted to '
+        'assume'.format(', '.join(groups)))
     template['Resources'] = {
             resource_name: OrderedDict()
         }
     template['Resources'][resource_name]['Type'] = 'AWS::IAM::Role'
-    template['Resources'][resource_name]['Properties'] = OrderedDict()
+    properties = OrderedDict()
     if role_name:
-        template['Resources'][resource_name]['Properties'][
-            'RoleName'] = role_name
-    template['Resources'][resource_name]['Properties'][
-        'AssumeRolePolicyDocument'] = assume_role_policy_document
-    template['Resources'][resource_name]['Properties'][
-        'Policies'] = [OrderedDict()]
-    template['Resources'][resource_name]['Properties'][
-        'Policies'][0]['PolicyName'] = policy_name
-    template['Resources'][resource_name]['Properties'][
-        'Policies'][0]['PolicyDocument'] = policy
+        properties['RoleName'] = role_name
+    properties['Description'] = (
+        'Federated IAM Role which the groups {} are permitted to '
+        'assume'.format(', '.join(groups)))
+    if (assume_role_policy_document['Statement'][0]['Principal']['Federated']
+            is None):
+        federated_principal = {
+            'Fn::Join': [
+                '',
+                [
+                    'arn:aws:iam::',
+                    {
+                        'Ref': 'AWS::AccountId'
+                    },
+                    ':oidc-provider/',
+                    IDENTITY_PROVIDER_URL
+                ]
+            ]
+        }
+        assume_role_policy_document['Statement'][0]['Principal'][
+            'Federated'] = federated_principal
+
+    properties['AssumeRolePolicyDocument'] = assume_role_policy_document
+    properties['Policies'] = [OrderedDict()]
+    properties['Policies'][0]['PolicyName'] = policy_name
+    properties['Policies'][0]['PolicyDocument'] = policy
+    template['Resources'][resource_name]['Properties'] = properties
 
     # No description field because of
     # https://github.com/aws-cloudformation/aws-cloudformation-coverage-roadmap/issues/6
@@ -133,10 +159,12 @@ def get_policy():
             print(FORMAT_PROMPT + "\n")
         format_input = input(
             'What format would you like the policy returned in?'
-            ' (c/cloudformation / a/awscli / j/json) ')
+            ' (c/cloudformation / j/json-cloudformation / a/awscli / '
+            'p/policy) ')
         if len(format_input) == 0:
             exit(0)
     format = format_input[0].lower()
+
     groups = sys.argv[2].split(',') if len(sys.argv) > 2 else None
     while groups is None or len(groups) == 0:
         if groups is None:
@@ -155,17 +183,24 @@ def get_policy():
                 ', at (@), underscore (_), and hyphen (-).')
         role_name = input('What name would you like for the AWS IAM Role? ')
 
+    account_id_input = sys.argv[4] if len(sys.argv) > 4 else None
+    if format != 'c':
+        while account_id_input is None or len(account_id_input) < 12:
+            if account_id_input is None:
+                print(ACCOUNT_ID_PROMPT + "\n")
+            account_id_input = input(
+                'What is the AWS Account ID of the account that this role will'
+                'be deployed in? ')
+            if len(account_id_input) == 0:
+                exit(0)
+
     if len(sys.argv) < 4:
         print("\n\n")
 
-    trusted_aws_account_id = '415589142697'
-    identity_provider_url = 'auth.mozilla.auth0.com/'
-    audience_value = 'N7lULzWtfVUDGymwDs0yDEq6ZcwmFazj'
-
     identity_provider = 'arn:aws:iam::{}:oidc-provider/{}'.format(
-        trusted_aws_account_id, identity_provider_url)
-    audience_key = '{}:aud'.format(identity_provider_url)
-    amr_key = '{}:amr'.format(identity_provider_url)
+        account_id_input, IDENTITY_PROVIDER_URL) if format != 'c' else None
+    audience_key = '{}:aud'.format(IDENTITY_PROVIDER_URL)
+    amr_key = '{}:amr'.format(IDENTITY_PROVIDER_URL)
     verb = (
         'StringLike'
         if any('*' in x or '?' in x for x in groups)
@@ -182,7 +217,7 @@ def get_policy():
     assume_role_policy_document['Statement'][0]['Effect'] = 'Allow'
     assume_role_policy_document['Statement'][0]['Condition'] = OrderedDict()
     assume_role_policy_document['Statement'][0][
-        'Condition']['StringEquals'] = {audience_key: audience_value}
+        'Condition']['StringEquals'] = {audience_key: AUDIENCE_VALUE}
     assume_role_policy_document['Statement'][0][
         'Condition']['ForAnyValue:{}'.format(verb)] = {}
 
@@ -203,6 +238,7 @@ def get_policy():
             assume_role_policy_document,
             policy_name,
             policy,
+            groups,
             get_yaml)
     elif format == 'j':
         return create_cloudformation_template(
@@ -210,6 +246,7 @@ def get_policy():
             assume_role_policy_document,
             policy_name,
             policy,
+            groups,
             get_json)
     elif format == 'a':
         return create_awscli_command(
