@@ -1,16 +1,18 @@
 {
     "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "Federated IAM Role which the groups foo, bar are permitted to assume",
     "Resources": {
         "BazIAMRole": {
             "Type": "AWS::IAM::Role",
             "Properties": {
                 "RoleName": "baz",
+                "Description": "Federated IAM Role which the groups foo, bar are permitted to assume",
                 "AssumeRolePolicyDocument": {
                     "Version": "2012-10-17",
                     "Statement": [
                         {
                             "Principal": {
-                                "Federated": "arn:aws:iam::415589142697:oidc-provider/auth.mozilla.auth0.com/"
+                                "Federated": "arn:aws:iam::123456789012:oidc-provider/auth.mozilla.auth0.com/"
                             },
                             "Action": "sts:AssumeRoleWithWebIdentity",
                             "Effect": "Allow",

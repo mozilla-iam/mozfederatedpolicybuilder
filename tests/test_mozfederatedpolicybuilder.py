@@ -19,15 +19,18 @@ def test_mozilla_federated_aws_policy_builder():
         good_c_result = get_policy()
     assert good_c_result == expected_cloudformation_result
 
-    with patch.object(sys, 'argv', ['', 'cloud', 'foo,bar', 'baz']):
+    with patch.object(
+            sys, 'argv', ['', 'cloud', 'foo,bar', 'baz', '123456789012']):
         good_cloudformation_result = get_policy()
     assert good_cloudformation_result == expected_cloudformation_result
 
-    with patch.object(sys, 'argv', ['', 'a', 'foo,bar', 'baz']):
+    with patch.object(
+            sys, 'argv', ['', 'a', 'foo,bar', 'baz', '123456789012']):
         good_awscli_result = get_policy()
     assert good_awscli_result == expected_awscli_result
 
-    with patch.object(sys, 'argv', ['', 'json', 'foo,bar', 'baz']):
+    with patch.object(
+            sys, 'argv', ['', 'json', 'foo,bar', 'baz', '123456789012']):
         good_json_result = get_policy()
     print(good_json_result)
     print(expected_json_result)
