@@ -1,0 +1,10 @@
+aws iam create-role \
+    --role-name baz \
+    --assume-role-policy-document '{"Version": "2012-10-17", "Statement": [{"Principal": {"Federated": "arn:aws:iam::123456789012:oidc-provider/auth.mozilla.auth0.com/"}, "Action": "sts:AssumeRoleWithWebIdentity", "Effect": "Allow", "Condition": {"StringEquals": {"auth.mozilla.auth0.com/:aud": "N7lULzWtfVUDGymwDs0yDEq6ZcwmFazj"}, "ForAnyValue:StringEquals": {"auth.mozilla.auth0.com/:amr": ["foo", "bar"]}}}]}' \
+    --description "Federated Role baz"
+
+sleep 2
+
+aws iam attach-role-policy \
+    --role-name baz \
+    --policy-arn arn:aws:iam::aws:policy/ReadOnlyAccess

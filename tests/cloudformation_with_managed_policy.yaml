@@ -1,0 +1,30 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Federated IAM Role which the groups foo, bar are permitted to assume
+Resources:
+  BazIAMRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: baz
+      Description: Federated IAM Role which the groups foo, bar are permitted to assume
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Principal:
+            Federated:
+              Fn::Join:
+              - ''
+              - - 'arn:aws:iam::'
+                - Ref: AWS::AccountId
+                - :oidc-provider/
+                - auth.mozilla.auth0.com/
+          Action: sts:AssumeRoleWithWebIdentity
+          Effect: Allow
+          Condition:
+            StringEquals:
+              auth.mozilla.auth0.com/:aud: N7lULzWtfVUDGymwDs0yDEq6ZcwmFazj
+            ForAnyValue:StringEquals:
+              auth.mozilla.auth0.com/:amr:
+              - foo
+              - bar
+      ManagedPolicyArns:
+      - arn:aws:iam::aws:policy/ReadOnlyAccess

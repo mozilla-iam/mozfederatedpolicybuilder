@@ -1,0 +1,25 @@
+Trust policy / Assume Role Policy Document
+
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Principal": {
+                "Federated": "arn:aws:iam::123456789012:oidc-provider/auth.mozilla.auth0.com/"
+            },
+            "Action": "sts:AssumeRoleWithWebIdentity",
+            "Effect": "Allow",
+            "Condition": {
+                "StringEquals": {
+                    "auth.mozilla.auth0.com/:aud": "N7lULzWtfVUDGymwDs0yDEq6ZcwmFazj"
+                },
+                "ForAnyValue:StringEquals": {
+                    "auth.mozilla.auth0.com/:amr": [
+                        "foo",
+                        "bar"
+                    ]
+                }
+            }
+        }
+    ]
+}

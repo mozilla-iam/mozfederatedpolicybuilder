@@ -64,10 +64,11 @@ def get_yaml(o):
 def create_cloudformation_template(
         role_name,
         assume_role_policy_document,
-        policy_name,
-        policy,
         groups,
-        formatter):
+        formatter,
+        policy_name=None,
+        policy=None,
+        policy_arn=None):
     resource_name = (
         ''.join([capitalize(x) for x in role_name.split('_')]) + 'IAMRole'
         if role_name else 'MyFederatedIAMRole')
@@ -105,11 +106,17 @@ def create_cloudformation_template(
             'Federated'] = federated_principal
 
     properties['AssumeRolePolicyDocument'] = assume_role_policy_document
-    properties['Policies'] = [OrderedDict()]
-    properties['Policies'][0]['PolicyName'] = policy_name
-    properties['Policies'][0]['PolicyDocument'] = policy
+    if policy_arn:
+        properties['ManagedPolicyArns'] = [policy_arn]
+    elif policy_name and policy:
+        properties['Policies'] = [OrderedDict()]
+        properties['Policies'][0]['PolicyName'] = policy_name
+        properties['Policies'][0]['PolicyDocument'] = policy
+    else:
+        raise Exception(
+            'MissingPolicy', 'create_cloudformation_template requires either'
+            'policy_arn or (policy_name and policy)')
     template['Resources'][resource_name]['Properties'] = properties
-
     # No description field because of
     # https://github.com/aws-cloudformation/aws-cloudformation-coverage-roadmap/issues/6
 
@@ -117,7 +124,11 @@ def create_cloudformation_template(
 
 
 def create_awscli_command(
-        role_name, assume_role_policy_document, policy_name, policy):
+        role_name,
+        assume_role_policy_document,
+        policy_name=None,
+        policy=None,
+        policy_arn=None):
     create_role = r"""aws iam create-role \
     --role-name {role_name} \
     --assume-role-policy-document '{assume_role_policy_document}' \
@@ -125,31 +136,40 @@ def create_awscli_command(
 
 sleep 2
 
-aws iam put-role-policy \
+"""
+    kwargs = {
+        'role_name': role_name,
+        'assume_role_policy_document': json.dumps(assume_role_policy_document)
+    }
+    if policy_arn:
+        create_role += r"""aws iam attach-role-policy \
+    --role-name {role_name} \
+    --policy-arn {policy_arn}
+"""
+        kwargs['policy_arn'] = policy_arn
+    elif policy_name and policy:
+        create_role += r"""aws iam put-role-policy \
     --role-name {role_name} \
     --policy-name {policy_name} \
-    --policy-document '{policy_document}'
+    --policy-document '{policy}'
 """
-    return create_role.format(
-        role_name=role_name,
-        assume_role_policy_document=json.dumps(assume_role_policy_document),
-        policy_name=policy_name,
-        policy_document=json.dumps(policy)
-    )
+        kwargs['policy_name'] = policy_name
+        kwargs['policy'] = json.dumps(policy)
+    else:
+        raise Exception(
+            'MissingPolicy', 'create_awscli_command requires either'
+            'policy_arn or (policy_name and policy)')
+
+    return create_role.format(**kwargs)
 
 
 def create_policy_json(assume_role_policy_document, policy):
     output = '''Trust policy / Assume Role Policy Document
 
-{assume_role_policy_document}
+{assume_role_policy_document}'''
 
-Policy Document
-
-{policy_document}'''
     return output.format(
-        assume_role_policy_document=get_json(assume_role_policy_document),
-        policy_document=get_json(policy)
-    )
+        assume_role_policy_document=get_json(assume_role_policy_document))
 
 
 def get_policy():
@@ -194,7 +214,22 @@ def get_policy():
             if len(account_id_input) == 0:
                 exit(0)
 
-    if len(sys.argv) < 4:
+    if len(sys.argv) > 5:
+        if sys.argv[5].lower() == 'none':
+            managed_policy_arn = None
+        else:
+            managed_policy_arn = sys.argv[5]
+    else:
+        if format != 'p':
+            managed_policy_arn = input(
+                "Would you like to attach a specific managed policy to the "
+                "role or just output an example inline policy? If you want to "
+                "attach a manage policy enter it's policy ARN otherwise just "
+                "hit enter: ")
+        else:
+            managed_policy_arn = None
+
+    if len(sys.argv) < 5:
         print("\n\n")
 
     identity_provider = 'arn:aws:iam::{}:oidc-provider/{}'.format(
@@ -221,6 +256,9 @@ def get_policy():
     assume_role_policy_document['Statement'][0][
         'Condition']['ForAnyValue:{}'.format(verb)] = {}
 
+    assume_role_policy_document['Statement'][0][
+        'Condition']['ForAnyValue:{}'.format(verb)][amr_key] = groups
+
     policy_name = 'ExamplePolicyGrantingGetCallerIdentity'
     policy = OrderedDict()
     policy['Version'] = '2012-10-17'
@@ -229,28 +267,30 @@ def get_policy():
     policy['Statement'][0]['Resource'] = '*'
     policy['Statement'][0]['Effect'] = 'Allow'
 
-    assume_role_policy_document['Statement'][0][
-        'Condition']['ForAnyValue:{}'.format(verb)][amr_key] = groups
+    if managed_policy_arn:
+        kwargs = {'policy_arn': managed_policy_arn}
+    else:
+        kwargs = {
+            'policy_name': policy_name,
+            'policy': policy}
 
     if format == 'c':
         return create_cloudformation_template(
             role_name,
             assume_role_policy_document,
-            policy_name,
-            policy,
             groups,
-            get_yaml)
+            get_yaml,
+            **kwargs)
     elif format == 'j':
         return create_cloudformation_template(
             role_name,
             assume_role_policy_document,
-            policy_name,
-            policy,
             groups,
-            get_json)
+            get_json,
+            **kwargs)
     elif format == 'a':
         return create_awscli_command(
-            role_name, assume_role_policy_document, policy_name, policy)
+            role_name, assume_role_policy_document, **kwargs)
     elif format == 'p':
         return create_policy_json(assume_role_policy_document, policy)
 
