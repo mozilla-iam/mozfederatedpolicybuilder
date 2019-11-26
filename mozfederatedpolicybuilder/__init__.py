@@ -116,6 +116,7 @@ def create_cloudformation_template(
         raise Exception(
             'MissingPolicy', 'create_cloudformation_template requires either'
             'policy_arn or (policy_name and policy)')
+    properties['MaxSessionDuration'] = 43200
     template['Resources'][resource_name]['Properties'] = properties
     # No description field because of
     # https://github.com/aws-cloudformation/aws-cloudformation-coverage-roadmap/issues/6
@@ -132,7 +133,8 @@ def create_awscli_command(
     create_role = r"""aws iam create-role \
     --role-name {role_name} \
     --assume-role-policy-document '{assume_role_policy_document}' \
-    --description "Federated Role {role_name}"
+    --description "Federated Role {role_name}" \
+    --max-session-duration 43200
 
 sleep 2
 

@@ -35,3 +35,4 @@ Resources:
             - sts:GetCallerIdentity
             Resource: '*'
             Effect: Allow
+      MaxSessionDuration: 43200

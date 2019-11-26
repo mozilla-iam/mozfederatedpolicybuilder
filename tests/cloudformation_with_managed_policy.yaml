@@ -28,3 +28,4 @@ Resources:
               - bar
       ManagedPolicyArns:
       - arn:aws:iam::aws:policy/ReadOnlyAccess
+      MaxSessionDuration: 43200

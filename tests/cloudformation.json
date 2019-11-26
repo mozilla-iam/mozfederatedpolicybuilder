@@ -46,7 +46,8 @@
                             ]
                         }
                     }
-                ]
+                ],
+                "MaxSessionDuration": 43200
             }
         }
     }
